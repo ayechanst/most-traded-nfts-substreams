@@ -1,4 +1,7 @@
 CARGO_VERSION := $(shell cargo version 2>/dev/null)
+START_BLOCK ?= 20000000
+STOP_BLOCK ?= +1000
+MODULE ?= map_mints
 
 .PHONY: build
 build:
@@ -11,7 +14,7 @@ endif
 
 .PHONY: run
 run: build
-	substreams run substreams.yaml $(if $(MODULE),$(MODULE),map_events) $(if $(START_BLOCK),-s $(START_BLOCK)) $(if $(STOP_BLOCK),-t $(STOP_BLOCK))
+	substreams run substreams.yaml $(MODULE) $(if $(START_BLOCK),-s $(START_BLOCK)) $(if $(STOP_BLOCK),-t $(STOP_BLOCK))
 
 .PHONY: gui
 gui: build

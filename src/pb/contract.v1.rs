@@ -1,16 +1,14 @@
 // @generated
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Transfer {
+pub struct Mint {
     #[prost(string, tag="1")]
     pub token_id: ::prost::alloc::string::String,
-    #[prost(string, tag="2")]
-    pub transfer_count: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Transfers {
+pub struct Mints {
     #[prost(message, repeated, tag="1")]
-    pub transfers: ::prost::alloc::vec::Vec<Transfer>,
+    pub mints: ::prost::alloc::vec::Vec<Mint>,
 }
 // @@protoc_insertion_point(module)

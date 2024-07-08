@@ -4,11 +4,10 @@ import "google/protobuf/timestamp.proto";
 
 package contract.v1;
 
-message Transfer {
-    string tokenID = 1;
-    string transferCount = 2;
+message Mint {
+    string token_id = 1;
 }
 
-message Transfers {
-    repeated Transfer transfers = 1;
+message Mints {
+    repeated Mint mints = 1;
 }
