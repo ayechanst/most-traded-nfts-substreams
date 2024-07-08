@@ -1,5 +1,6 @@
 mod abi;
 mod pb;
+use helpers::format_hex;
 use hex_literal::hex;
 use pb::contract::v1 as contract;
 use substreams::Hex;
@@ -9,6 +10,7 @@ use substreams_entity_change::pb::entity::EntityChanges;
 use substreams_entity_change::tables::Tables as EntityChangesTables;
 use substreams_ethereum::pb::eth::v2 as eth;
 use substreams_ethereum::Event;
+mod helpers;
 
 #[allow(unused_imports)]
 use num_traits::cast::ToPrimitive;
@@ -17,204 +19,17 @@ use substreams::scalar::BigDecimal;
 
 substreams_ethereum::init!();
 
-const NFTS_TRACKED_CONTRACT: [u8; 20] = hex!("bc4ca0eda7647a8ab7c2061c2e118a18a936f13d");
-
-fn map_nfts_events(blk: &eth::Block, events: &mut contract::Events) {
-    events.nfts_approvals.append(&mut blk
-        .receipts()
-        .flat_map(|view| {
-            view.receipt.logs.iter()
-                .filter(|log| log.address == NFTS_TRACKED_CONTRACT)
-                .filter_map(|log| {
-                    if let Some(event) = abi::nfts_contract::events::Approval::match_and_decode(log) {
-                        return Some(contract::NftsApproval {
-                            evt_tx_hash: Hex(&view.transaction.hash).to_string(),
-                            evt_index: log.block_index,
-                            evt_block_time: Some(blk.timestamp().to_owned()),
-                            evt_block_number: blk.number,
-                            approved: event.approved,
-                            owner: event.owner,
-                            token_id: event.token_id.to_string(),
-                        });
-                    }
-
-                    None
-                })
-        })
-        .collect());
-    events.nfts_approval_for_alls.append(&mut blk
-        .receipts()
-        .flat_map(|view| {
-            view.receipt.logs.iter()
-                .filter(|log| log.address == NFTS_TRACKED_CONTRACT)
-                .filter_map(|log| {
-                    if let Some(event) = abi::nfts_contract::events::ApprovalForAll::match_and_decode(log) {
-                        return Some(contract::NftsApprovalForAll {
-                            evt_tx_hash: Hex(&view.transaction.hash).to_string(),
-                            evt_index: log.block_index,
-                            evt_block_time: Some(blk.timestamp().to_owned()),
-                            evt_block_number: blk.number,
-                            approved: event.approved,
-                            operator: event.operator,
-                            owner: event.owner,
-                        });
-                    }
-
-                    None
-                })
-        })
-        .collect());
-    events.nfts_ownership_transferreds.append(&mut blk
-        .receipts()
-        .flat_map(|view| {
-            view.receipt.logs.iter()
-                .filter(|log| log.address == NFTS_TRACKED_CONTRACT)
-                .filter_map(|log| {
-                    if let Some(event) = abi::nfts_contract::events::OwnershipTransferred::match_and_decode(log) {
-                        return Some(contract::NftsOwnershipTransferred {
-                            evt_tx_hash: Hex(&view.transaction.hash).to_string(),
-                            evt_index: log.block_index,
-                            evt_block_time: Some(blk.timestamp().to_owned()),
-                            evt_block_number: blk.number,
-                            new_owner: event.new_owner,
-                            previous_owner: event.previous_owner,
-                        });
-                    }
-
-                    None
-                })
-        })
-        .collect());
-    events.nfts_transfers.append(&mut blk
-        .receipts()
-        .flat_map(|view| {
-            view.receipt.logs.iter()
-                .filter(|log| log.address == NFTS_TRACKED_CONTRACT)
-                .filter_map(|log| {
-                    if let Some(event) = abi::nfts_contract::events::Transfer::match_and_decode(log) {
-                        return Some(contract::NftsTransfer {
-                            evt_tx_hash: Hex(&view.transaction.hash).to_string(),
-                            evt_index: log.block_index,
-                            evt_block_time: Some(blk.timestamp().to_owned()),
-                            evt_block_number: blk.number,
-                            from: event.from,
-                            to: event.to,
-                            token_id: event.token_id.to_string(),
-                        });
-                    }
-
-                    None
-                })
-        })
-        .collect());
-}
-
-fn db_nfts_out(events: &contract::Events, tables: &mut DatabaseChangeTables) {
-    // Loop over all the abis events to create table changes
-    events.nfts_approvals.iter().for_each(|evt| {
-        tables
-            .create_row("nfts_approval", [("evt_tx_hash", evt.evt_tx_hash.to_string()),("evt_index", evt.evt_index.to_string())])
-            .set("evt_block_time", evt.evt_block_time.as_ref().unwrap())
-            .set("evt_block_number", evt.evt_block_number)
-            .set("approved", Hex(&evt.approved).to_string())
-            .set("owner", Hex(&evt.owner).to_string())
-            .set("token_id", BigDecimal::from_str(&evt.token_id).unwrap());
-    });
-    events.nfts_approval_for_alls.iter().for_each(|evt| {
-        tables
-            .create_row("nfts_approval_for_all", [("evt_tx_hash", evt.evt_tx_hash.to_string()),("evt_index", evt.evt_index.to_string())])
-            .set("evt_block_time", evt.evt_block_time.as_ref().unwrap())
-            .set("evt_block_number", evt.evt_block_number)
-            .set("approved", evt.approved)
-            .set("operator", Hex(&evt.operator).to_string())
-            .set("owner", Hex(&evt.owner).to_string());
-    });
-    events.nfts_ownership_transferreds.iter().for_each(|evt| {
-        tables
-            .create_row("nfts_ownership_transferred", [("evt_tx_hash", evt.evt_tx_hash.to_string()),("evt_index", evt.evt_index.to_string())])
-            .set("evt_block_time", evt.evt_block_time.as_ref().unwrap())
-            .set("evt_block_number", evt.evt_block_number)
-            .set("new_owner", Hex(&evt.new_owner).to_string())
-            .set("previous_owner", Hex(&evt.previous_owner).to_string());
-    });
-    events.nfts_transfers.iter().for_each(|evt| {
-        tables
-            .create_row("nfts_transfer", [("evt_tx_hash", evt.evt_tx_hash.to_string()),("evt_index", evt.evt_index.to_string())])
-            .set("evt_block_time", evt.evt_block_time.as_ref().unwrap())
-            .set("evt_block_number", evt.evt_block_number)
-            .set("from", Hex(&evt.from).to_string())
-            .set("to", Hex(&evt.to).to_string())
-            .set("token_id", BigDecimal::from_str(&evt.token_id).unwrap());
-    });
-}
-
-
-fn graph_nfts_out(events: &contract::Events, tables: &mut EntityChangesTables) {
-    // Loop over all the abis events to create table changes
-    events.nfts_approvals.iter().for_each(|evt| {
-        tables
-            .create_row("nfts_approval", format!("{}-{}", evt.evt_tx_hash, evt.evt_index))
-            .set("evt_tx_hash", &evt.evt_tx_hash)
-            .set("evt_index", evt.evt_index)
-            .set("evt_block_time", evt.evt_block_time.as_ref().unwrap())
-            .set("evt_block_number", evt.evt_block_number)
-            .set("approved", Hex(&evt.approved).to_string())
-            .set("owner", Hex(&evt.owner).to_string())
-            .set("token_id", BigDecimal::from_str(&evt.token_id).unwrap());
-    });
-    events.nfts_approval_for_alls.iter().for_each(|evt| {
-        tables
-            .create_row("nfts_approval_for_all", format!("{}-{}", evt.evt_tx_hash, evt.evt_index))
-            .set("evt_tx_hash", &evt.evt_tx_hash)
-            .set("evt_index", evt.evt_index)
-            .set("evt_block_time", evt.evt_block_time.as_ref().unwrap())
-            .set("evt_block_number", evt.evt_block_number)
-            .set("approved", evt.approved)
-            .set("operator", Hex(&evt.operator).to_string())
-            .set("owner", Hex(&evt.owner).to_string());
-    });
-    events.nfts_ownership_transferreds.iter().for_each(|evt| {
-        tables
-            .create_row("nfts_ownership_transferred", format!("{}-{}", evt.evt_tx_hash, evt.evt_index))
-            .set("evt_tx_hash", &evt.evt_tx_hash)
-            .set("evt_index", evt.evt_index)
-            .set("evt_block_time", evt.evt_block_time.as_ref().unwrap())
-            .set("evt_block_number", evt.evt_block_number)
-            .set("new_owner", Hex(&evt.new_owner).to_string())
-            .set("previous_owner", Hex(&evt.previous_owner).to_string());
-    });
-    events.nfts_transfers.iter().for_each(|evt| {
-        tables
-            .create_row("nfts_transfer", format!("{}-{}", evt.evt_tx_hash, evt.evt_index))
-            .set("evt_tx_hash", &evt.evt_tx_hash)
-            .set("evt_index", evt.evt_index)
-            .set("evt_block_time", evt.evt_block_time.as_ref().unwrap())
-            .set("evt_block_number", evt.evt_block_number)
-            .set("from", Hex(&evt.from).to_string())
-            .set("to", Hex(&evt.to).to_string())
-            .set("token_id", BigDecimal::from_str(&evt.token_id).unwrap());
-    });
-}
-
 #[substreams::handlers::map]
-fn map_events(blk: eth::Block) -> Result<contract::Events, substreams::errors::Error> {
-    let mut events = contract::Events::default();
-    map_nfts_events(&blk, &mut events);
-    Ok(events)
-}
-
-#[substreams::handlers::map]
-fn db_out(events: contract::Events) -> Result<DatabaseChanges, substreams::errors::Error> {
-    // Initialize Database Changes container
-    let mut tables = DatabaseChangeTables::new();
-    db_nfts_out(&events, &mut tables);
-    Ok(tables.to_database_changes())
-}
-
-#[substreams::handlers::map]
-fn graph_out(events: contract::Events) -> Result<EntityChanges, substreams::errors::Error> {
-    // Initialize Database Changes container
-    let mut tables = EntityChangesTables::new();
-    graph_nfts_out(&events, &mut tables);
-    Ok(tables.to_entity_changes())
+fn map_nft_transfers(blk: &eth::Block) -> Result<Transfers, substreams::errors::Error> {
+    let transfers = blk.logs().filter_map(|log| {
+        if format_hex(&log.log.address)
+            == "0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D".to_lowercase()
+        {
+            if let Some(transfer) = Transfer::match_and_decode(log) {
+                let tokenID = 
+            }
+        } else {
+            None;
+        }
+    });
 }

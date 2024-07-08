@@ -1,84 +1,16 @@
 // @generated
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Events {
+pub struct Transfer {
+    #[prost(string, tag="1")]
+    pub token_id: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub transfer_count: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Transfers {
     #[prost(message, repeated, tag="1")]
-    pub nfts_approvals: ::prost::alloc::vec::Vec<NftsApproval>,
-    #[prost(message, repeated, tag="2")]
-    pub nfts_approval_for_alls: ::prost::alloc::vec::Vec<NftsApprovalForAll>,
-    #[prost(message, repeated, tag="3")]
-    pub nfts_ownership_transferreds: ::prost::alloc::vec::Vec<NftsOwnershipTransferred>,
-    #[prost(message, repeated, tag="4")]
-    pub nfts_transfers: ::prost::alloc::vec::Vec<NftsTransfer>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct NftsApproval {
-    #[prost(string, tag="1")]
-    pub evt_tx_hash: ::prost::alloc::string::String,
-    #[prost(uint32, tag="2")]
-    pub evt_index: u32,
-    #[prost(message, optional, tag="3")]
-    pub evt_block_time: ::core::option::Option<::prost_types::Timestamp>,
-    #[prost(uint64, tag="4")]
-    pub evt_block_number: u64,
-    #[prost(bytes="vec", tag="5")]
-    pub owner: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes="vec", tag="6")]
-    pub approved: ::prost::alloc::vec::Vec<u8>,
-    #[prost(string, tag="7")]
-    pub token_id: ::prost::alloc::string::String,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct NftsApprovalForAll {
-    #[prost(string, tag="1")]
-    pub evt_tx_hash: ::prost::alloc::string::String,
-    #[prost(uint32, tag="2")]
-    pub evt_index: u32,
-    #[prost(message, optional, tag="3")]
-    pub evt_block_time: ::core::option::Option<::prost_types::Timestamp>,
-    #[prost(uint64, tag="4")]
-    pub evt_block_number: u64,
-    #[prost(bytes="vec", tag="5")]
-    pub owner: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes="vec", tag="6")]
-    pub operator: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bool, tag="7")]
-    pub approved: bool,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct NftsOwnershipTransferred {
-    #[prost(string, tag="1")]
-    pub evt_tx_hash: ::prost::alloc::string::String,
-    #[prost(uint32, tag="2")]
-    pub evt_index: u32,
-    #[prost(message, optional, tag="3")]
-    pub evt_block_time: ::core::option::Option<::prost_types::Timestamp>,
-    #[prost(uint64, tag="4")]
-    pub evt_block_number: u64,
-    #[prost(bytes="vec", tag="5")]
-    pub previous_owner: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes="vec", tag="6")]
-    pub new_owner: ::prost::alloc::vec::Vec<u8>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct NftsTransfer {
-    #[prost(string, tag="1")]
-    pub evt_tx_hash: ::prost::alloc::string::String,
-    #[prost(uint32, tag="2")]
-    pub evt_index: u32,
-    #[prost(message, optional, tag="3")]
-    pub evt_block_time: ::core::option::Option<::prost_types::Timestamp>,
-    #[prost(uint64, tag="4")]
-    pub evt_block_number: u64,
-    #[prost(bytes="vec", tag="5")]
-    pub from: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes="vec", tag="6")]
-    pub to: ::prost::alloc::vec::Vec<u8>,
-    #[prost(string, tag="7")]
-    pub token_id: ::prost::alloc::string::String,
+    pub transfers: ::prost::alloc::vec::Vec<Transfer>,
 }
 // @@protoc_insertion_point(module)
