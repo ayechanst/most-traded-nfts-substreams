@@ -15,7 +15,7 @@ message tokens_Transfers {
 }
 
 message Mint {
-    bytes num_of_tokens = 1;
+    string num_of_tokens = 1;
 }
 
 message Mints {

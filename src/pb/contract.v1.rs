@@ -18,8 +18,8 @@ pub struct TokensTransfers {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Mint {
-    #[prost(bytes="vec", tag="1")]
-    pub num_of_tokens: ::prost::alloc::vec::Vec<u8>,
+    #[prost(string, tag="1")]
+    pub num_of_tokens: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]

@@ -1,6 +1,7 @@
 mod abi;
 mod pb;
 use abi::nfts_contract::events::Transfer;
+use abi::nfts_contract::functions::MintApe;
 use helpers::format_hex;
 use pb::contract::v1::{Mint, Mints, TokensTransfer, TokensTransfers};
 use substreams::pb::substreams::module::input;
@@ -21,24 +22,31 @@ substreams_ethereum::init!();
 
 pub const BAYC: &str = "0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D";
 pub const ZERO_ADDRESS: &str = "0x0000000000000000000000000000000000000000";
+pub const MINT_APE: &str = "0xa723533e0000000000000000000000000000000000000000000000000000000000000002";
 
 #[substreams::handlers::map]
 fn map_ape_mints(blk: Block) -> Result<Mints, substreams::errors::Error> {
     let ape_mints = blk
-        .calls()
-        .filter_map(|call| {
-            if format_hex(&call.call.address) == BAYC.to_lowercase() {
-                match &call.call.input {
-                    Some(input_data) => {
-                        substreams::log::info!("{:?}", &input_data);
-                        Some(Mint {
-                            num_of_tokens: input_data,
-                        })
-                    }
-                    None => None,
+        .logs()
+        .filter_map(|log_view| {
+            if format_hex(&log_view.log.address) == BAYC.to_lowercase() {
+                if format_hex(&log_view.log.topics[0] == MINT_APE.to_lowercase()) {
+                    // left off here. we want to find the value of a variable in the Mint_Ape function
+                    if let Some(value) = &log_view.
+                    Some(Mint {
+                        num_of_tokens: value.
+                    })
                 }
+                // if let Some(mint) = MintApe::match_and_decode(log_view) {
+                    //     let token_id = mint.number_of_tokens.to_string();
+                //     Some(mint);
+                // }
+                None
             }
             None
+        })
+        .map(|mint| Mint {
+            num_of_tokens: mint.number_of_tokens,
         })
         .collect::<Vec<Mint>>();
     Ok(Mints { mints: ape_mints })
